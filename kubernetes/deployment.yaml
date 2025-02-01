@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: distributed-ml-deployment
+  labels:
+    app: distributed-ml
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: distributed-ml
+  template:
+    metadata:
+      labels:
+        app: distributed-ml
+    spec:
+      containers:
+      - name: distributed-ml
+        image: distributed-ml:latest
+        ports:
+        - containerPort: 50051
+        resources:
+          requests:
+            cpu: 500m
+            memory: 512Mi
+          limits:
+            cpu: 2
+            memory: 2Gi
+---
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: distributed-ml-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: distributed-ml-deployment
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: 70
